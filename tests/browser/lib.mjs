@@ -62,7 +62,9 @@ let nextPort = 9300 + Math.floor(Math.random() * 400);
 export async function browser({ width = 1352, height = 878, base = ENV.base } = {}) {
   const port = nextPort++, profile = fs.mkdtempSync(path.join(os.tmpdir(), 'zm-chrome-'));
   const chrome = spawn(CHROME, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${port}`, `--window-size=${width},${height}`,
-    '--host-resolver-rules=MAP zm.test 127.0.0.1', `--user-data-dir=${profile}`, '--no-first-run', '--no-default-browser-check', 'about:blank'], { stdio: 'ignore' });
+    '--host-resolver-rules=MAP zm.test 127.0.0.1', `--user-data-dir=${profile}`,
+    // the test site is plain http; treat it as secure like the real https site (crypto.subtle, service worker)
+    ...(base ? [`--unsafely-treat-insecure-origin-as-secure=${new URL(base).origin}`] : []), '--no-first-run', '--no-default-browser-check', 'about:blank'], { stdio: 'ignore' });
   let target;
   for (let i = 0; i < 80 && !target; i++) {
     try { target = (await (await fetch(`http://127.0.0.1:${port}/json`)).json()).find(t => t.type === 'page'); } catch {}

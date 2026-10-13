@@ -77,9 +77,17 @@
     .lede { font-size: 17px; }
     .me-name { font-size: 42px; }
     .field input { max-width: none; }
+    .google-btn, .or { max-width: none; }
     form .slab { max-width: none; }
   }
   @media (prefers-reduced-motion: reduce) { input.switch, input.switch::after { transition: none; } }
+  /* Google */
+  .google { margin: 0 0 18px; }
+  .google-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 420px; min-height: 46px; padding: 0 16px; }
+  .google-btn svg { width: 18px; height: 18px; flex: none; }
+  .google-note { margin: 8px 0 0; font-size: 13px; color: var(--muted); }
+  .or { display: flex; align-items: center; gap: 12px; max-width: 420px; margin: 18px 0 0; font-size: 13px; color: var(--muted); }
+  .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 </style>
 <link rel="stylesheet" href="theme.css">
 </head>
@@ -119,6 +127,11 @@
         <button type="button" role="tab" id="t-up" aria-selected="true">Sign up</button>
         <button type="button" role="tab" id="t-in" aria-selected="false">Log in</button>
       </div>
+      <div class="google" id="google-box" hidden>
+        <button class="btn google-btn" type="button" id="google"><svg viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>Continue with Google</button>
+        <p class="google-note">Your Google email stays private: only the name you pick is shown.</p>
+        <p class="or"><span>or with a name and password</span></p>
+      </div>
       <form id="form" novalidate>
         <label class="field"><span>Name</span><input id="name" name="username" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20" required><small id="name-hint">3 to 20 letters, digits or underscores. This is the name on the leaderboard.</small></label>
         <ol class="tower inline-preview" aria-hidden="true"><li class="me"><span class="pos">P–</span><span class="stripe"></span><span class="who empty" data-preview>your name</span><span class="figure">—</span><span class="gap">PB</span></li></ol>
@@ -145,6 +158,20 @@
         <p class="aside"><b>No email</b>So there’s no password reset. If you forget your password, the account can’t be recovered: save it in your password manager.</p>
       </section>
     </aside>
+  </div>
+
+  <!-- signed in with Google for the first time: pick the name on the leaderboard -->
+  <div class="acct" id="pick" hidden>
+    <section class="panel">
+      <h2 class="title">Pick your name.</h2>
+      <p class="lede">You’re signed in with Google. Choose the name the leaderboard shows: 3 to 20 letters, digits or underscores. It can’t be changed later.</p>
+      <form id="pick-form" novalidate>
+        <label class="field"><span>Name</span><input id="pick-name" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="20" required></label>
+        <ol class="tower inline-preview" aria-hidden="true"><li class="me"><span class="pos">P–</span><span class="stripe"></span><span class="who empty" id="pick-preview">your name</span><span class="figure">—</span><span class="gap">PB</span></li></ol>
+        <button class="slab" type="submit" id="pick-submit"><b>Save name</b><span>Enter</span></button>
+        <p class="msg" id="pick-msg" role="alert"></p>
+      </form>
+    </section>
   </div>
 
   <!-- signed in -->

@@ -196,6 +196,50 @@
     catch (err) { im.className = 'msg err'; im.textContent = err.message; }
   });
 
-  if (cloud.user()) showIn();
+  // ---- Google ----
+  // The button shows only when the project has Google switched on.
+  cloud.googleOn().then(on => { $('#google-box').hidden = !on; });
+  $('#google').addEventListener('click', () => {
+    $('#google').disabled = true;
+    cloud.signInWithGoogle().catch(err => { $('#google').disabled = false; $('#msg').className = 'msg err'; $('#msg').textContent = err.message; });
+  });
+  // A Google account still on its placeholder name picks its leaderboard name first.
+  function showPick() {
+    $('#out').hidden = true; $('#in').hidden = true; $('#pick').hidden = false;
+    const input = $('#pick-name');
+    input.addEventListener('input', () => {
+      const v = input.value.trim();
+      $('#pick-preview').textContent = v || 'your name';
+      $('#pick-preview').classList.toggle('empty', !v);
+      input.setAttribute('aria-invalid', v && !cloud.nameOk(v) ? 'true' : 'false');
+    });
+    input.focus();
+  }
+  $('#pick-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#pick-msg'), name = $('#pick-name').value.trim();
+    msg.className = 'msg err';
+    if (!cloud.nameOk(name)) { msg.textContent = 'Names are 3 to 20 letters, digits or underscores.'; return $('#pick-name').focus(); }
+    $('#pick-submit').disabled = true;
+    try {
+      await cloud.setUsername(name);
+      $('#pick').hidden = true;
+      showIn(`Welcome, ${cloud.user().name}. Your games now save to your account and your best go on the leaderboard.`);
+    } catch (err) {
+      msg.textContent = err.message;
+    } finally {
+      $('#pick-submit').disabled = false;
+    }
+  });
+  // A Google sign-in that didn't finish says why (once cloud.js has tried the code).
+  cloud.googleReturn.then(() => {
+    try {
+      const flash = sessionStorage.getItem('zm-flash');
+      if (flash && /Google/.test(flash)) { sessionStorage.removeItem('zm-flash'); $('#msg').className = 'msg err'; $('#msg').textContent = flash; }
+    } catch {}
+  });
+
+  if (cloud.user()?.pending) showPick();
+  else if (cloud.user()) showIn();
   else { $('#out').hidden = false; setMode(new URLSearchParams(location.search).get('mode') === 'login' ? 'in' : 'up'); }
 })();

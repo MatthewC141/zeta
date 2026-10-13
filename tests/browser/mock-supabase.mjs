@@ -65,6 +65,8 @@ export async function startMock(port) {
     }
   };
   const broadcasts = [];  // every broadcast seen, for the tests
+  const codes = new Map();  // Google sign-in codes waiting to be traded
+  let googleNext = 'player@gmail.com', googleOn = process.env.ZM_GOOGLE !== '0';
 
   const server = http.createServer(async (req, res) => {
     const send = (status, body) => {
@@ -81,6 +83,16 @@ export async function startMock(port) {
       try { return send(200, (await owner(json.sql, json.params || [])).rows.map(plain)); } catch (e) { return send(400, { message: e.message }); }
     }
     if (url.pathname === '/__broadcasts') return send(200, broadcasts);
+    if (url.pathname === '/__google') { if (json.email) googleNext = json.email; if ('on' in json) googleOn = !!json.on; return send(200, {}); }  // who "signs in with Google" next, and whether it's on
+    // Google sign-in, as Supabase does it with PKCE: /authorize sends the browser back to
+    // redirect_to with a one-time code (Google's consent screen is skipped here), and the code is
+    // traded for a session only with the secret whose hash came with it.
+    if (url.pathname === '/auth/v1/authorize') {
+      const back = new URL(url.searchParams.get('redirect_to'));
+      if (url.searchParams.get('provider') !== 'google' || !googleOn) { back.searchParams.set('error', 'unsupported_provider'); back.searchParams.set('error_description', 'Provider is not enabled'); }
+      else { const c = 'g-' + crypto.randomUUID(); codes.set(c, { challenge: url.searchParams.get('code_challenge'), email: googleNext }); back.searchParams.set('code', c); }
+      res.writeHead(302, { Location: back.href }); return res.end();
+    }
     if (req.headers.apikey !== KEY) return send(401, { message: 'Invalid API key' });
     const uid = tokens.get((req.headers.authorization || '').replace('Bearer ', '')) || null;
     try {
@@ -95,15 +107,29 @@ export async function startMock(port) {
         return send(200, session(acc));
       }
       if (url.pathname === '/auth/v1/token') {
+        if (url.searchParams.get('grant_type') === 'pkce') {
+          const c = codes.get(json.auth_code);
+          codes.delete(json.auth_code);
+          const hashed = json.code_verifier && crypto.createHash('sha256').update(json.code_verifier).digest('base64url');
+          if (!c || hashed !== c.challenge) return send(400, { error: 'invalid_grant', error_description: 'Invalid code or verifier' });
+          let acc = accounts.get(c.email);
+          if (!acc) {
+            const id = (await owner(`insert into auth.users (email, raw_user_meta_data, raw_app_meta_data) values ($1, $2, $3) returning id`,
+              [c.email, JSON.stringify({ email: c.email }), JSON.stringify({ provider: 'google', providers: ['google'] })])).rows[0].id;
+            accounts.set(c.email, acc = { id, hash: null });
+          }
+          return send(200, session(acc));
+        }
         if (url.searchParams.get('grant_type') === 'password') {
           const acc = accounts.get(json.email);
-          if (!acc || acc.hash !== hash(json.password)) return send(400, { error: 'invalid_grant', error_description: 'Invalid login credentials' });
+          if (!acc || !acc.hash || acc.hash !== hash(json.password)) return send(400, { error: 'invalid_grant', error_description: 'Invalid login credentials' });
           return send(200, session(acc));
         }
         const id = tokens.get(json.refresh_token), acc = [...accounts.values()].find(a => a.id === id);
         return acc ? send(200, session(acc)) : send(400, { error: 'invalid_grant', error_description: 'Invalid Refresh Token' });
       }
       if (url.pathname === '/auth/v1/logout') return send(204);
+      if (url.pathname === '/auth/v1/settings') return send(200, { external: { email: true, google: googleOn }, mailer_autoconfirm: true });
       if (url.pathname === '/realtime/v1/api/broadcast') {
         for (const m of json.messages || []) { broadcasts.push(m); deliver(`realtime:${m.topic}`, m.event, m.payload); }
         return send(202);

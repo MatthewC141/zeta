@@ -20,7 +20,7 @@ export const done = () => { console.log(`${pass} passed, ${fail} failed`); proce
 export const SUPABASE = `
   create role anon nologin; create role authenticated nologin;
   create schema auth;
-  create table auth.users (id uuid primary key default gen_random_uuid(), email text, raw_user_meta_data jsonb);
+  create table auth.users (id uuid primary key default gen_random_uuid(), email text, raw_user_meta_data jsonb, raw_app_meta_data jsonb);
   create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
   grant usage on schema public to anon, authenticated; grant usage on schema auth to anon, authenticated;
   alter default privileges in schema public grant all on tables to anon, authenticated;
@@ -46,6 +46,9 @@ export async function fresh(sql = SCHEMA) {
   t.err = async (fn) => { try { await fn(); return null; } catch (e) { return e.message; } };
   t.user = async name => (await db.query(`insert into auth.users (email, raw_user_meta_data) values ($1, $2) returning id`,
     [`${name.toLowerCase()}@users.zetamac-tracker.invalid`, JSON.stringify({ username: name })])).rows[0].id;
+  // Someone signing in with Google for the first time (Supabase records the provider itself).
+  t.googleUser = async email => (await db.query(`insert into auth.users (email, raw_user_meta_data, raw_app_meta_data) values ($1, $2, $3) returning id`,
+    [email, JSON.stringify({ full_name: 'Somebody', email }), JSON.stringify({ provider: 'google', providers: ['google'] })])).rows[0].id;
   t.utc = (await db.query(`select (now() at time zone 'utc')::date::text d`)).rows[0].d;
   let k = 0;
   // Saves a game as a player; returns the saved row (or undefined when the database drops it).

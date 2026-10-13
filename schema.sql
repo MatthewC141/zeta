@@ -3,7 +3,9 @@
 --
 -- Accounts use Supabase Auth with a username and password. There is no email: the site signs in
 -- with <name>@users.zetamac-tracker.invalid, an address that can never receive mail, so turn off
--- "Confirm email" (Authentication → Sign In / Providers → Email).
+-- "Confirm email" (Authentication → Sign In / Providers → Email). Players can also sign in with
+-- Google (turn on Authentication → Sign In / Providers → Google): such an account starts with a
+-- placeholder name, kept off the leaderboard, until the player picks theirs (set_username).
 --
 -- Security model: every table has row level security, and each role is granted only what the site
 -- uses. Players read, add and delete only their own scores and can't edit them. Whether a game
@@ -19,6 +21,8 @@ create table if not exists public.profiles (
 create unique index if not exists profiles_username_lower on public.profiles (lower(username));
 -- A private account keeps every score off the leaderboard (set with set_private below).
 alter table public.profiles add column if not exists private boolean not null default false;
+-- false while a Google account still has its placeholder name (set_username picks the real one)
+alter table public.profiles add column if not exists name_set boolean not null default true;
 alter table public.profiles enable row level security;
 drop policy if exists "read own profile" on public.profiles;
 create policy "read own profile" on public.profiles for select to authenticated using (id = (select auth.uid()));
@@ -30,6 +34,12 @@ create or replace function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = '' as $$
 declare name text := new.raw_user_meta_data ->> 'username';
 begin
+  -- Signed up with Google: a placeholder name, private until the player picks theirs.
+  if coalesce(new.raw_app_meta_data ->> 'provider', 'email') = 'google' then
+    name := 'player_' || substr(replace(new.id::text, '-', ''), 1, 12);
+    insert into public.profiles (id, username, private, name_set) values (new.id, name, true, false);
+    return new;
+  end if;
   if name is null or name !~ '^[A-Za-z0-9_]{3,20}$' then
     raise exception 'Names are 3 to 20 letters, digits or underscores.';
   end if;
@@ -43,11 +53,12 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- A name's sign-in address never changes (that would move the name to another account).
+-- A name's sign-in address never changes (that would move the name to another account). A Google
+-- account's address is Google's, and may change there.
 create or replace function public.keep_email() returns trigger
 language plpgsql set search_path = '' as $$
 begin
-  if new.email is distinct from old.email then
+  if coalesce(old.email, '') like '%@users.zetamac-tracker.invalid' and new.email is distinct from old.email then
     raise exception 'Names can''t be changed.';
   end if;
   return new;
@@ -457,6 +468,28 @@ returns jsonb language sql stable security definer set search_path = '' as $$
 $$;
 revoke execute on function public.board(text, int, boolean, text, int), public.boards(boolean, text), public.standing(text, int, int, text) from public;
 grant execute on function public.board(text, int, boolean, text, int), public.boards(boolean, text), public.standing(text, int, int, text) to anon, authenticated;
+
+-- ---- a Google account's name ---------------------------------------------------------------
+-- A player who signed up with Google picks their leaderboard name once; the account then joins the
+-- leaderboard like any other. Names are 3 to 20 letters, digits or underscores, any capitals, and
+-- each is taken once whatever its capitals. Returns the name as saved.
+create or replace function public.set_username(p_name text) returns text
+language plpgsql security definer set search_path = '' as $$
+declare v_name text := btrim(coalesce(p_name, ''));
+begin
+  if auth.uid() is null then raise exception 'Sign in first.'; end if;
+  if v_name !~ '^[A-Za-z0-9_]{3,20}$' then raise exception 'Names are 3 to 20 letters, digits or underscores.'; end if;
+  if not exists (select 1 from public.profiles where id = auth.uid() and not name_set) then
+    raise exception 'Your name is already set.';
+  end if;
+  if exists (select 1 from public.profiles where lower(username) = lower(v_name) and id <> auth.uid()) then
+    raise exception 'That name is taken. Pick another.';
+  end if;
+  update public.profiles set username = v_name, name_set = true, private = false where id = auth.uid();
+  return v_name;
+end $$;
+revoke execute on function public.set_username(text) from public, anon;
+grant execute on function public.set_username(text) to authenticated;
 
 -- ---- deleting an account -------------------------------------------------------------------
 -- Removes the signed-in player's login, profile and every score.

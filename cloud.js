@@ -9,7 +9,9 @@
   // (With your own domain: change it here, and og:image in each page's head.)
   window.ZM_SITE = 'https://matthewc141.github.io/zetamac-tracker/';
 
-  const SESSION = 'zm-session';
+  const SESSION = 'zm-session', PKCE = 'zm-pkce';
+  const b64url = bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  let googleOn = null;
   const nameOk = s => /^[A-Za-z0-9_]{3,20}$/.test(s);
   // No email: each name signs in with an address that can never receive mail.
   const emailFor = name => `${name.toLowerCase()}@users.zetamac-tracker.invalid`;
@@ -41,8 +43,9 @@
   }
 
   // The name shown is always the account's fixed username, never the account's editable metadata.
-  const keep = (data, name) => {
-    const s = { access: data.access_token, refresh: data.refresh_token, expires: Date.now() + (data.expires_in - 60) * 1000, id: data.user?.id, name };
+  // `pending`: a Google account that hasn't picked its name yet (its name is a placeholder).
+  const keep = (data, name, pending = false) => {
+    const s = { access: data.access_token, refresh: data.refresh_token, expires: Date.now() + (data.expires_in - 60) * 1000, id: data.user?.id, name, ...(pending && { pending: true }) };
     write(s);
     return s;
   };
@@ -57,7 +60,7 @@
     if (!force && Date.now() < s.expires) return s.access;
     renewing ||= (async () => {
       try {
-        return keep(await call('/auth/v1/token?grant_type=refresh_token', { method: 'POST', body: { refresh_token: s.refresh } }), s.name).access;
+        return keep(await call('/auth/v1/token?grant_type=refresh_token', { method: 'POST', body: { refresh_token: s.refresh } }), s.name, s.pending).access;
       } catch (err) {
         if (err.status >= 400 && err.status < 500) { write(null); err.signedOut = true; }
         throw err;
@@ -93,10 +96,58 @@
     };
   }
 
+  // Back from Google (?code=… or ?error=…): trade the code for a session, look up the account's name,
+  // and go to the account page (which asks for a name if it's still a placeholder). The code is
+  // taken out of the address either way.
+  async function finishGoogle() {
+    const q = new URLSearchParams(location.search);
+    const code = q.get('code'), problem = q.get('error_description') || q.get('error');
+    if (!code && !problem) return;
+    let verifier = null;
+    try { verifier = sessionStorage.getItem(PKCE); sessionStorage.removeItem(PKCE); } catch {}
+    history.replaceState(null, '', location.pathname + location.hash);
+    if (problem || !verifier) {
+      try { sessionStorage.setItem('zm-flash', `Google sign-in didn’t finish${problem ? `: ${problem}` : '.'} Try again.`); } catch {}
+      return;
+    }
+    try {
+      const data = await call('/auth/v1/token?grant_type=pkce', { method: 'POST', body: { auth_code: code, code_verifier: verifier } });
+      const rows = await call(`/rest/v1/profiles?select=username,name_set&id=eq.${encodeURIComponent(data.user?.id || '')}`, { token: data.access_token });
+      const p = rows?.[0];
+      if (!p) throw new Error('No account came back.');
+      keep(data, p.username, !p.name_set);
+      location.replace(new URL('account.html', location.href).href);
+    } catch (err) {
+      try { sessionStorage.setItem('zm-flash', `Google sign-in didn’t finish: ${err.message}`); } catch {}
+    }
+  }
+
   window.ZM_CLOUD = {
     ready: !!(SUPABASE_URL && SUPABASE_KEY),
+    googleReturn: SUPABASE_URL ? finishGoogle() : Promise.resolve(),
     nameOk,
-    user: () => { const s = read(); return s && { id: s.id, name: s.name }; },
+    user: () => { const s = read(); return s && { id: s.id, name: s.name, ...(s.pending && { pending: true }) }; },
+    // Google: whether the project has it switched on (Supabase's public settings), then the trip
+    // there and back. The trip uses PKCE: a random secret stays in this tab, Supabase gets only
+    // its hash, and the code Google's sign-in sends back is good only with the secret. Back on the
+    // site, finishGoogle (run below on every page) trades the code for a session.
+    googleOn: () => (googleOn ||= call('/auth/v1/settings').then(d => !!d?.external?.google, () => false)),
+    async signInWithGoogle() {
+      const bytes = crypto.getRandomValues(new Uint8Array(32));
+      const verifier = b64url(bytes);
+      const challenge = b64url(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))));
+      try { sessionStorage.setItem(PKCE, verifier); } catch {}
+      const back = new URL('account.html', location.href).href;
+      location.assign(`${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(back)}&code_challenge=${challenge}&code_challenge_method=s256`);
+    },
+    // A Google account picks its leaderboard name, once.
+    async setUsername(name) {
+      if (!nameOk(name)) throw new Error('Names are 3 to 20 letters, digits or underscores.');
+      const saved = await this.rest('rpc/set_username', { method: 'POST', body: { p_name: name } });
+      const s = read();
+      if (s) { delete s.pending; s.name = saved; write(s); }
+      return saved;
+    },
     async signUp(name, password) {
       if (!nameOk(name)) throw new Error('Names are 3 to 20 letters, digits or underscores.');
       const data = await call('/auth/v1/signup', { method: 'POST', body: { email: emailFor(name), password, data: { username: name } } });
