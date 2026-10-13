@@ -390,6 +390,14 @@ create or replace function public.wrongs_in(p_mode text, p_detail jsonb) returns
 language sql immutable set search_path = '' as $$
   select case when p_mode in ('o80', 'seq', 'frac', 'est') then (select count(*)::int from jsonb_array_elements(p_detail) q where q ->> 'r' = 'n') end;
 $$;
+-- A database that once ran a version whose boards also carried where each game was played (a
+-- `source` column) has views Postgres won't narrow in place: those are dropped and made again.
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'leaderboard' and column_name = 'source') then
+    drop view if exists public.leaderboard_week cascade;
+    drop view if exists public.leaderboard cascade;
+  end if;
+end $$;
 create or replace view public.leaderboard with (security_invoker = false) as
   select distinct on (s.user_id, s.mode, s.seconds)
     p.username, s.mode, s.seconds, s.score, s.elapsed, s.date, public.wrongs_in(s.mode, s.detail) as wrongs
@@ -415,6 +423,7 @@ grant select on public.leaderboard, public.leaderboard_week, public.daily_board 
 -- The boards in order, worked out here so a page fetches only what it shows. Places follow the
 -- leaderboard's rules: best score, then on endless the faster run, on the quant tests fewer wrong
 -- answers and then the faster finish; players level on all of that share a place.
+drop function if exists private.board_rows(boolean, text, int);  -- (its columns may differ from an older version's)
 create or replace function private.board_rows(p_week boolean, p_mode text default null, p_seconds int default null)
 returns table (username text, mode text, seconds int, score int, elapsed int, date date, wrongs int, place bigint, pos bigint, total bigint)
 language sql stable set search_path = '' as $$
