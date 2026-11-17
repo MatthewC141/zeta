@@ -1,7 +1,5 @@
 # Zeta
 
-A clone of [zetamac](https://arithmetic.zetamac.com) that saves every game, plus a dashboard to track progress over time. I made it to practice for trading interview mental math tests.
-
 **Live:** [matthewc141.github.io/zeta](https://matthewc141.github.io/zeta/)
 
 ## Features
