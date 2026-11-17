@@ -6,11 +6,11 @@ A clone of [zetamac](https://arithmetic.zetamac.com) that saves every game, plus
 
 ## Features
 
-- Same game and default settings as zetamac (2 min, +/−/×/÷), plus 30-second and endless modes
+- (2 min, +/−/×/÷), plus 30-second and endless modes
 - A daily challenge: the same 2 minutes of questions for everyone each day, one try, with its own board and streak
 - Squares mode (two- and three-digit) and practice drills, including one built from your own weak spots that brings back the questions you were slow on until they're quick
 - Combined mode: two-step problems like (5 + 2) × (15 + 9)
-- Quant tests, marked right minus wrong: 80 in 8 (Optiver-style), number sequences, fractions and estimation
+- tests, marked right minus wrong: 80 in 8, number sequences, fractions and estimation
 - Duels on the website: ranked (Elo, quarterly seasons) or unranked, a public queue, a private code or a challenge by name, and a ghost race against a saved game when nobody's around
 - Per-question timing, so you can see which kinds of problems slow you down, and a replay of any saved game
 - Dashboard with score history, daily bests, a calendar heatmap, and slowest question types
