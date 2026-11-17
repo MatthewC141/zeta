@@ -391,7 +391,7 @@ static Problem next_problem(std::mt19937& rng) {
 static int play_round(std::mt19937& rng) {
   out("\033[?1049h\033[H\033[2J");
   g_alt = true;
-  out("\033[2;3HZetamach · 120 seconds · + – × ÷ (default settings)"
+  out("\033[2;3HZeta · 120 seconds · + – × ÷ (default settings)"
       "\033[4;3HType answers — correct ones are accepted instantly, no Enter needed."
       "\033[5;3HBackspace fixes mistakes. Esc quits a round without saving."
       "\033[7;3HPress any key to start.");
@@ -856,7 +856,7 @@ static int cmd_tracker(int port) {
   listen(srv, 16);
 
   std::string url = "http://127.0.0.1:" + std::to_string(port) + "/";
-  std::printf("Zetamach tracker running at %s  (Ctrl-C to stop)\n", url.c_str());
+  std::printf("Zeta tracker running at %s  (Ctrl-C to stop)\n", url.c_str());
   std::fflush(stdout);
   if (!std::getenv("ZETAMAC_NO_OPEN")) {
 #ifdef __APPLE__
@@ -899,7 +899,7 @@ static int cmd_add(int argc, char** argv) {
 
 static void usage() {
   std::printf(
-      "Zetamach — mental arithmetic drill (zetamac default settings) + progress tracker\n\n"
+      "Zeta — mental arithmetic drill (zetamac default settings) + progress tracker\n\n"
       "  zetamac                  play\n"
       "  zetamac add SCORE [DATE]  log a score by hand (DATE = YYYY-MM-DD, default today)\n"
       "  zetamac stats            show your stats\n"

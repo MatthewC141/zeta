@@ -8,7 +8,7 @@ await b.ev(`localStorage.setItem('zm-welcome-seen', '1')`);
 // ---- a first visit ----
 await b.go('');
 check('a first visit shows the empty score panel', /No 2-minute arithmetic games yet/.test(await b.text('#score')));
-check('the tab and the header say Zetamach', /Zetamach/.test(await b.ev('document.title')) && (await b.text('.zh-mark')) === 'Zetamach');
+check('the tab and the header say Zeta', /Zeta/.test(await b.ev('document.title')) && (await b.text('.zh-mark')) === 'Zeta');
 
 // ---- arithmetic ----
 await b.go('play.html');

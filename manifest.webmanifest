@@ -1,7 +1,7 @@
 {
-  "name": "Zetamach",
-  "short_name": "Zetamach",
-  "description": "Zetamach: zetamac-style arithmetic drills, quant tests and duels, with every question timed.",
+  "name": "Zeta",
+  "short_name": "Zeta",
+  "description": "Zeta: zetamac-style arithmetic drills, quant tests and duels, with every question timed.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
