@@ -2,7 +2,7 @@
 
 A clone of [zetamac](https://arithmetic.zetamac.com) that saves every game, plus a dashboard to track progress over time. I made it to practice for trading interview mental math tests.
 
-**Live:** [matthewc141.github.io/zetamac-tracker](https://matthewc141.github.io/zetamac-tracker/)
+**Live:** [matthewc141.github.io/zeta](https://matthewc141.github.io/zeta/)
 
 ## Features
 
@@ -24,13 +24,13 @@ The local version is a single C++ program with no dependencies:
 
 ```sh
 make
-./zetamac tracker     # dashboard at http://127.0.0.1:8777
-./zetamac             # play in the terminal
-./zetamac add 52      # log a score from the real zetamac
-./zetamac stats
+./zeta tracker     # dashboard at http://127.0.0.1:8777
+./zeta             # play in the terminal
+./zeta add 52      # log a score from the real zetamac
+./zeta stats
 ```
 
-Scores are saved to `scores.csv` next to the binary (set `ZETAMAC_HOME` to change that).
+Scores are saved to `scores.csv` next to the binary (set `ZETA_HOME` to change that).
 
 ## Website
 

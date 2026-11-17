@@ -11,7 +11,7 @@ window.zmSave = async function save(el, game, history, line) {
   try {
     const r = await fetch('api/game', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Zetamac': '1' },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Zeta': '1' },
       body: new URLSearchParams({ score, elapsed, detail: JSON.stringify(log), seconds, mode }),
     });
     const data = await r.json();
@@ -24,7 +24,7 @@ window.zmSave = async function save(el, game, history, line) {
     if (mine?.detail && log.length) el.insertAdjacentHTML('beforeend', ` · <a href="./#game=${encodeURIComponent(mine.ts)}">See breakdown</a>`);
     return list;
   } catch {
-    el.innerHTML = (window.ZM_WEB ? 'Couldn’t save in this browser.' : 'Couldn’t save — is <code>./zetamac tracker</code> running?') + ' <a href="#" class="retry">Retry</a>';
+    el.innerHTML = (window.ZM_WEB ? 'Couldn’t save in this browser.' : 'Couldn’t save — is <code>./zeta tracker</code> running?') + ' <a href="#" class="retry">Retry</a>';
     return new Promise(resolve => {
       el.querySelector('.retry').onclick = e => { e.preventDefault(); resolve(save(el, game, history, line)); };
     });

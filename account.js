@@ -24,7 +24,7 @@
   async function moveLocal() {
     const n = localCount();
     if (!n) return 0;
-    const r = await fetch('api/import', { method: 'POST', headers: { 'X-Zetamac': '1' }, body: JSON.stringify(window.ZM_LOCAL.exportFile()) });
+    const r = await fetch('api/import', { method: 'POST', headers: { 'X-Zeta': '1' }, body: JSON.stringify(window.ZM_LOCAL.exportFile()) });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || 'Couldn’t move your games.');
     // Clear this browser's copy only once the account holds the games.

@@ -2,7 +2,7 @@
 // fetched, and served from here only when the network can't be reached, so an online visit
 // always gets the latest version. Scores are handled by the pages themselves (store.js): signed
 // out they live in the browser, signed in they wait for a connection to go up.
-const CACHE = 'zetamac-v4';
+const CACHE = 'zeta-v5';
 const PAGES = ['./', 'index.html', 'play.html', 'squares.html', 'mixed.html', 'practice.html', 'optiver.html', 'duel.html', 'guide.html',
   'leaderboard.html', 'account.html', 'profile.html', 'cloud.js', 'store.js', 'launch.js', 'launch.css', 'site.css', 'theme.css', 'dash-core.js', 'dash-chart.js', 'dash-weak.js', 'dash-score.js', 'dash-games.js', 'dash-transfer.js', 'dash-replay.js', 'dashboard.js',
   'save.js', 'say.js', 'game.js', 'play.js', 'squares.js', 'mixed.js', 'practice.js', 'optiver.js', 'problems.js', 'guide.js', 'boards.js', 'leaderboard.js', 'account.js', 'profile.js', 'duel.js', 'matches.js', 'duel-history.js', 'manifest.webmanifest', 'fonts/Geist-Variable.woff2', 'fonts/GeistMono-Variable.woff2'];

@@ -57,7 +57,7 @@ const me = 'pat' + Math.random().toString(36).slice(2, 6);
 await b.go('account.html', 600);
 await signUp(b, me);
 await player('xtra', [arith(99, 70)]);
-await b.ev(`fetch('api/game', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Zetamac': '1' }, body: new URLSearchParams({ score: 65, seconds: 120, mode: 'standard', elapsed: 0, detail: ${JSON.stringify(JSON.stringify(arithLog('standard', 77, 65, 1700)))} }) })`);
+await b.ev(`fetch('api/game', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Zeta': '1' }, body: new URLSearchParams({ score: 65, seconds: 120, mode: 'standard', elapsed: 0, detail: ${JSON.stringify(JSON.stringify(arithLog('standard', 77, 65, 1700)))} }) })`);
 await b.go('', 1800);
 check('the dashboard says where your best stands', /Your best of 65 · Better than 60% of 10 players/.test(await b.text('#score .sb-pct')), await b.text('#score .sb-pct'));
 

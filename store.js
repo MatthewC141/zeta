@@ -2,8 +2,8 @@
 // the pages' /api/* requests itself. Signed out, scores stay in the visitor's own browser
 // (localStorage): every visitor starts with an empty tracker and nobody sees anyone else's scores.
 // Signed in (cloud.js), the same requests go to the player's account instead, so their scores
-// follow them between devices. Both follow the rules of the C++ server (zetamac.cpp). Opened from
-// ./zetamac tracker, it does nothing.
+// follow them between devices. Both follow the rules of the C++ server (zeta.cpp). Opened from
+// ./zeta tracker, it does nothing.
 (() => {
   // Never run inside another site's frame (GitHub Pages can't send X-Frame-Options): hide the page
   // and take over the whole tab instead, so no one can dress it up and trick a click.

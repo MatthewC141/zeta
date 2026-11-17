@@ -1,5 +1,5 @@
 // Drives headless Chrome over the DevTools protocol (no extra packages), and serves a copy of the
-// site pointed at the stand-in database. The site is reached as http://zm.test:PORT/zetamac-tracker/
+// site pointed at the stand-in database. The site is reached as http://zm.test:PORT/zeta/
 // (a name Chrome maps to this machine), so it runs in website mode as it does on GitHub Pages.
 import { spawn, execSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -26,7 +26,7 @@ export const ENV = { base: process.env.ZM_BASE, mock: process.env.ZM_MOCK, track
 // A copy of the project for the test site: cloud.js points at the stand-in database, and the
 // pages' security policy lets them reach it.
 export function buildSite(dir, mockOrigin) {
-  const site = path.join(dir, 'zetamac-tracker');
+  const site = path.join(dir, 'zeta');
   fs.rmSync(site, { recursive: true, force: true });
   const files = execSync('git ls-files --cached --others --exclude-standard', { cwd: ROOT, encoding: 'utf8' }).split('\n')
     .filter(f => f && !f.startsWith('tests/') && !f.startsWith('details/') && f !== 'scores.csv' && fs.existsSync(path.join(ROOT, f)));

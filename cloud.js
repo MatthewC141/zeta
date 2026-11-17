@@ -7,7 +7,7 @@
 
   // The website's address, for the links from the tracker on your computer to the website version.
   // (With your own domain: change it here, and og:image in each page's head.)
-  window.ZM_SITE = 'https://matthewc141.github.io/zetamac-tracker/';
+  window.ZM_SITE = 'https://matthewc141.github.io/zeta/';
 
   const SESSION = 'zm-session', PKCE = 'zm-pkce';
   const b64url = bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');

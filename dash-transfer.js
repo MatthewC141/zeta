@@ -3,7 +3,7 @@
 // Export: every score with its question log, as one JSON file. Import (website only): merges a file in.
 if (window.ZM_WEB) {
   $('#import-label').hidden = false;
-  $('#move-note').textContent = 'Bring your history over: export it from the tracker on your computer (./zetamac tracker), then import the file here. Export also makes a backup of this browser’s scores.';
+  $('#move-note').textContent = 'Bring your history over: export it from the tracker on your computer (./zeta tracker), then import the file here. Export also makes a backup of this browser’s scores.';
 }
 $('#export').addEventListener('click', async () => {
   const msg = $('#move-msg');
@@ -38,7 +38,7 @@ $('#import').addEventListener('change', async e => {
   if (file.size > 50e6) { msg.className = 'msg err'; msg.textContent = 'That file is too big to be a tracker export (over 50 MB).'; return; }
   msg.className = 'msg'; msg.textContent = 'Importing…';
   try {
-    const r = await fetch('api/import', { method: 'POST', headers: { 'X-Zetamac': '1' }, body: await file.text() });
+    const r = await fetch('api/import', { method: 'POST', headers: { 'X-Zeta': '1' }, body: await file.text() });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || 'Import failed');
     detailCache.clear();

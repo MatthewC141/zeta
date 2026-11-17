@@ -46,8 +46,8 @@ if (kind === 'all' || kind === 'browser') {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'zm-test-'));
   const shots = process.env.ZM_SHOTS ? path.join(HERE, 'shots') : '';
   if (shots) fs.mkdirSync(shots, { recursive: true });
-  // The local tracker (zetamac.cpp), built if needed, run on an empty scratch copy.
-  if (!fs.existsSync(path.join(ROOT, 'zetamac'))) execSync('make', { cwd: ROOT, stdio: 'ignore' });
+  // The local tracker (zeta.cpp), built if needed, run on an empty scratch copy.
+  if (!fs.existsSync(path.join(ROOT, 'zeta'))) execSync('make', { cwd: ROOT, stdio: 'ignore' });
   for (const file of list('browser')) {
     const mock = await startMock(0 || 8820 + Math.floor(Math.random() * 100));
     const mockOrigin = `http://127.0.0.1:${mock.port}`;
@@ -57,9 +57,9 @@ if (kind === 'all' || kind === 'browser') {
     const home = fs.mkdtempSync(path.join(tmp, 'tracker-'));
     for (const f of fs.readdirSync(site)) fs.cpSync(path.join(site, f), path.join(home, f), { recursive: true });
     const trackerPort = 8600 + Math.floor(Math.random() * 90);
-    const tracker = spawn(path.join(ROOT, 'zetamac'), ['tracker', String(trackerPort)], { env: { ...process.env, ZETAMAC_HOME: home, ZETAMAC_NO_OPEN: '1' }, stdio: 'ignore' });
+    const tracker = spawn(path.join(ROOT, 'zeta'), ['tracker', String(trackerPort)], { env: { ...process.env, ZETA_HOME: home, ZETA_NO_OPEN: '1' }, stdio: 'ignore' });
     await new Promise(r => setTimeout(r, 400));
-    ok = (await run(file, { ZM_BASE: `http://zm.test:${sitePort}/zetamac-tracker/`, ZM_MOCK: mockOrigin, ZM_TRACKER: `http://127.0.0.1:${trackerPort}/`, ZM_TRACKER_HOME: home, ZM_SHOTS: shots })) && ok;
+    ok = (await run(file, { ZM_BASE: `http://zm.test:${sitePort}/zeta/`, ZM_MOCK: mockOrigin, ZM_TRACKER: `http://127.0.0.1:${trackerPort}/`, ZM_TRACKER_HOME: home, ZM_SHOTS: shots })) && ok;
     tracker.kill(); web.close(); await mock.close();
   }
   fs.rmSync(tmp, { recursive: true, force: true });

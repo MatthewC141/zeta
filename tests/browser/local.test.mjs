@@ -1,4 +1,4 @@
-// The tracker on your computer (./zetamac tracker), run on an empty scratch copy: games save to
+// The tracker on your computer (./zeta tracker), run on an empty scratch copy: games save to
 // its scores.csv, the dashboard reads them back, and the server only answers its own pages.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -40,7 +40,7 @@ check('the dashboard does the same', urls.filter(u => /api\/details\?/.test(u)).
 const status = async (p, opts) => (await fetch(T + p, opts)).status;
 check('a save without the page’s header is refused', await status('api/game', { method: 'POST', body: 'score=5&seconds=120' }) === 403);
 check('scores.csv itself is not served', (await status('scores.csv')) === 404);
-check('unknown files are not served', (await status('zetamac.cpp')) === 404 && (await status('../etc/passwd')) === 404);
+check('unknown files are not served', (await status('zeta.cpp')) === 404 && (await status('../etc/passwd')) === 404);
 check('no page errors', b.errors.length === 0, b.errors);
 b.close();
 done();

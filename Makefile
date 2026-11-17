@@ -1,16 +1,16 @@
 CXX ?= c++
 CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra
 
-zetamac: zetamac.cpp
+zeta: zeta.cpp
 	$(CXX) $(CXXFLAGS) -o $@ $<
 
-play: zetamac
-	./zetamac
+play: zeta
+	./zeta
 
-tracker: zetamac
-	./zetamac tracker
+tracker: zeta
+	./zeta tracker
 
 clean:
-	rm -f zetamac
+	rm -f zeta
 
 .PHONY: play tracker clean

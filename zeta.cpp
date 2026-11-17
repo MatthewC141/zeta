@@ -1,10 +1,10 @@
-// zetamac — terminal clone of arithmetic.zetamac.com (default settings) plus a
+// zeta — terminal clone of arithmetic.zetamac.com (default settings) plus a
 // score log and a local web dashboard.
 //
-//   ./zetamac                 play (loops until you quit)
-//   ./zetamac add 52 [DATE]   log a score by hand (DATE = YYYY-MM-DD, default today)
-//   ./zetamac stats           summary in the terminal
-//   ./zetamac tracker [PORT]  open the progress dashboard (default port 8777)
+//   ./zeta                 play (loops until you quit)
+//   ./zeta add 52 [DATE]   log a score by hand (DATE = YYYY-MM-DD, default today)
+//   ./zeta stats           summary in the terminal
+//   ./zeta tracker [PORT]  open the progress dashboard (default port 8777)
 
 #include <algorithm>
 #include <cctype>
@@ -106,7 +106,7 @@ static std::string shift_date(const std::string& s, int days) {
 }
 
 static fs::path exe_dir() {
-  if (const char* env = std::getenv("ZETAMAC_HOME")) return fs::path(env);
+  if (const char* env = std::getenv("ZETA_HOME")) return fs::path(env);
   char buf[4096];
 #ifdef __APPLE__
   uint32_t size = sizeof buf;
@@ -469,7 +469,7 @@ static int play_round(std::mt19937& rng) {
 
 static int cmd_play() {
   if (!enter_raw()) {
-    std::fprintf(stderr, "zetamac: play needs an interactive terminal\n");
+    std::fprintf(stderr, "zeta: play needs an interactive terminal\n");
     return 1;
   }
   std::signal(SIGTERM, on_signal);
@@ -495,7 +495,7 @@ static int cmd_play() {
       if (!saved) out("  ! could not write " + scores_path().string() + "\n");
       print_summary(before);
     }
-    out("\n  [Enter/Space] play again    [q] quit    (progress charts: ./zetamac tracker)\n");
+    out("\n  [Enter/Space] play again    [q] quit    (progress charts: ./zeta tracker)\n");
 
     // Swallow keys typed as the timer ran out so they don't skip this screen.
     usleep(600 * 1000);
@@ -767,8 +767,8 @@ static void handle_client(int fd) {
 
   if (method == "POST") {
     // Custom header forces a CORS preflight, so other websites can't post here.
-    if (lower.find("\r\nx-zetamac: 1") == std::string::npos)
-      return respond_error(fd, "403 Forbidden", "missing X-Zetamac header");
+    if (lower.find("\r\nx-zeta: 1") == std::string::npos)
+      return respond_error(fd, "403 Forbidden", "missing X-Zeta header");
     auto form = parse_form(body);
 
     if (path == "/api/scores") {
@@ -850,7 +850,7 @@ static int cmd_tracker(int port) {
   addr.sin_port = htons(static_cast<uint16_t>(port));
   addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
   if (bind(srv, reinterpret_cast<sockaddr*>(&addr), sizeof addr) != 0) {
-    std::fprintf(stderr, "zetamac: port %d is busy — try ./zetamac tracker %d\n", port, port + 1);
+    std::fprintf(stderr, "zeta: port %d is busy — try ./zeta tracker %d\n", port, port + 1);
     return 1;
   }
   listen(srv, 16);
@@ -858,7 +858,7 @@ static int cmd_tracker(int port) {
   std::string url = "http://127.0.0.1:" + std::to_string(port) + "/";
   std::printf("Zeta tracker running at %s  (Ctrl-C to stop)\n", url.c_str());
   std::fflush(stdout);
-  if (!std::getenv("ZETAMAC_NO_OPEN")) {
+  if (!std::getenv("ZETA_NO_OPEN")) {
 #ifdef __APPLE__
     std::system(("open " + url).c_str());
 #else
@@ -879,16 +879,16 @@ static int cmd_tracker(int port) {
 static int cmd_add(int argc, char** argv) {
   int score;
   if (argc < 3 || !parse_int(argv[2], score) || score > 500) {
-    std::fprintf(stderr, "usage: zetamac add SCORE [YYYY-MM-DD]\n");
+    std::fprintf(stderr, "usage: zeta add SCORE [YYYY-MM-DD]\n");
     return 1;
   }
   std::string date = argc > 3 ? argv[3] : today();
   if (!valid_date(date) || date > today()) {
-    std::fprintf(stderr, "zetamac: bad date '%s' (use YYYY-MM-DD, not in the future)\n", date.c_str());
+    std::fprintf(stderr, "zeta: bad date '%s' (use YYYY-MM-DD, not in the future)\n", date.c_str());
     return 1;
   }
   if (!append_score(make_entry(score, date, "manual"))) {
-    std::fprintf(stderr, "zetamac: could not write %s\n", scores_path().c_str());
+    std::fprintf(stderr, "zeta: could not write %s\n", scores_path().c_str());
     return 1;
   }
   std::printf("Logged %d on %s.\n\n", score, date.c_str());
@@ -900,10 +900,10 @@ static int cmd_add(int argc, char** argv) {
 static void usage() {
   std::printf(
       "Zeta — mental arithmetic drill (zetamac default settings) + progress tracker\n\n"
-      "  zetamac                  play\n"
-      "  zetamac add SCORE [DATE]  log a score by hand (DATE = YYYY-MM-DD, default today)\n"
-      "  zetamac stats            show your stats\n"
-      "  zetamac tracker [PORT]   open the progress dashboard in your browser (default 8777)\n\n"
+      "  zeta                  play\n"
+      "  zeta add SCORE [DATE]  log a score by hand (DATE = YYYY-MM-DD, default today)\n"
+      "  zeta stats            show your stats\n"
+      "  zeta tracker [PORT]   open the progress dashboard in your browser (default 8777)\n\n"
       "Scores live in %s\n",
       scores_path().c_str());
 }
@@ -921,7 +921,7 @@ int main(int argc, char** argv) {
   if (cmd == "tracker" || cmd == "serve") {
     int port = 8777;
     if (argc > 2 && (!parse_int(argv[2], port) || port < 1 || port > 65535)) {
-      std::fprintf(stderr, "zetamac: bad port\n");
+      std::fprintf(stderr, "zeta: bad port\n");
       return 1;
     }
     return cmd_tracker(port);

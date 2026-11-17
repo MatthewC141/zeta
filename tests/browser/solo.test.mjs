@@ -55,7 +55,7 @@ await b.ev('finish()');
 await b.until(`/challenge saved/.test(document.querySelector('#saved').textContent)`);
 await b.go('play.html');
 check('…then the card shows the result', /Today: 5/.test(await b.text('#daily-text')));
-const again = await b.ev(`fetch('api/game', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Zetamac': '1' }, body: 'score=9&seconds=120&mode=daily&elapsed=0&detail=[]' }).then(async r => [r.status, (await r.json()).error])`);
+const again = await b.ev(`fetch('api/game', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Zeta': '1' }, body: 'score=9&seconds=120&mode=daily&elapsed=0&detail=[]' }).then(async r => [r.status, (await r.json()).error])`);
 check('a second daily the same day is refused', again[0] === 400 && /already played/.test(again[1]), again);
 
 // ---- squares, combined, practice ----
@@ -158,7 +158,7 @@ await b.ev(`document.querySelector('#weak .slowq li .wi-x').click()`);
 check('an endless run: leaving its slowest question out says how much shorter the run would have been',
   (await b.text('#weak .wi-line')).startsWith(`Without that question: your run would have been ${want.freed} s shorter`), [await b.text('#weak .wi-line'), want]);
 // a newer 2-minute game, then the same on it
-await b.ev(`fetch('api/game', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Zetamac': '1' },
+await b.ev(`fetch('api/game', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Zeta': '1' },
   body: new URLSearchParams({ score: 30, seconds: 120, mode: 'standard', elapsed: 0, detail: JSON.stringify(ZM_PROBLEMS.list('standard', 3, 30).map((p, i) => ({ q: p.q, a: p.a, o: p.o, c: 0, t: i === 7 ? 9000 : i === 2 ? 6000 : 2500 }))) }) })`);
 await b.go('', 1800);
 await b.until(`document.querySelector('#weak .wi-x')`);
@@ -222,13 +222,13 @@ await b.shot('solo-dashboard', true);
 await b.ev(`(f => { f.querySelector('#f-score').value = '52'; f.requestSubmit(); })(document.querySelector('#add'))`);
 await b.until(`/Logged 52/.test(document.querySelector('#f-msg').textContent)`);
 check('a score logged by hand is added', /Logged 52/.test(await b.text('#f-msg')));
-check('a date in the future is refused', /future/.test(await b.ev(`fetch('api/scores', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Zetamac': '1' }, body: 'score=5&date=2999-01-01' }).then(r => r.json()).then(d => d.error)`)));
+check('a date in the future is refused', /future/.test(await b.ev(`fetch('api/scores', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Zeta': '1' }, body: 'score=5&date=2999-01-01' }).then(r => r.json()).then(d => d.error)`)));
 
 // ---- export and import ----
 const file = await b.ev(`JSON.stringify(ZM_LOCAL.exportFile())`);
 const count = JSON.parse(file).scores.length;
 check('export holds every game, with question logs', count >= 10 && JSON.parse(file).scores.some(s => Array.isArray(s.detail)), count);
-const imp = await b.ev(`fetch('api/import', { method: 'POST', headers: { 'X-Zetamac': '1' }, body: ${JSON.stringify(file)} }).then(r => r.json())`);
+const imp = await b.ev(`fetch('api/import', { method: 'POST', headers: { 'X-Zeta': '1' }, body: ${JSON.stringify(file)} }).then(r => r.json())`);
 check('importing the same file again adds nothing', imp.added === 0 && imp.skipped === count, imp);
 
 // ---- deleting ----

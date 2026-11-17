@@ -102,7 +102,7 @@ function setGames(list) {
 async function api(path, form) {
   const opts = form ? {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Zetamac': '1' },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Zeta': '1' },
     body: new URLSearchParams(form),
   } : {};
   const r = await fetch(path, opts);

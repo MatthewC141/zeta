@@ -68,7 +68,7 @@ check('declining tells the challenger', true);
 
 // ---- a ghost race ----
 const log = await X.ev(`JSON.stringify(ZM_PROBLEMS.list('standard', 5, 30).map(p => ({ q: p.q, a: p.a, o: p.o, c: 0, t: 1500 })))`);
-await X.ev(`fetch('api/game', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Zetamac': '1' }, body: new URLSearchParams({ score: 30, seconds: 120, mode: 'standard', elapsed: 0, detail: ${JSON.stringify(log)} }) })`);
+await X.ev(`fetch('api/game', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Zeta': '1' }, body: new URLSearchParams({ score: 30, seconds: 120, mode: 'standard', elapsed: 0, detail: ${JSON.stringify(log)} }) })`);
 await X.ev(`document.querySelector('[data-ghost="mine"]').click()`);
 await X.until(PLAYING, 14000);
 check('racing your own best uses its questions', (await X.text('#question')) === JSON.parse(log)[0].q);
